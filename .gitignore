@@ -1,0 +1,30 @@
+# Terraform local directories
+.terraform/
+
+# Terraform local state
+*.tfstate
+*.tfstate.*
+
+# Terraform plan files (never commit)
+*.tfplan
+*.tfplan.*
+*plan.out
+*plan.json
+
+# Terraform refresh outputs
+*refresh.out
+
+# Sensitive / generated JSON
+iac/iac_basic_setup.json
+
+
+# Local
+
+.env
+.env.local
+
+# Binaries/archives
+/privateer
+*.tar.gz
+*.tfplan
+

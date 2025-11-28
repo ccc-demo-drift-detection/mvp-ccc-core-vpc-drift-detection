@@ -1,0 +1,19 @@
+# Build context hygiene
+.git
+.gitignore
+.env*
+aws/
+output/
+iac/.terraform*
+iac/terraform.tfstate*
+iac/tfplan.*
+*.log
+*.tmp
+.DS_Store
+
+# Build artifacts and caches
+__pycache__/
+*.pyc
+*.pyo
+
+# CLI downloads (allow including Privateer tarball for offline builds)

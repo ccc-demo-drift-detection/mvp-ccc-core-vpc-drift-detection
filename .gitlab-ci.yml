@@ -1,0 +1,12 @@
+# Top-level CI selector for three pipeline modes.
+# Set CI/CD variable PIPELINE_MODE to one of:
+#  - validate-only (read-only checks; no Terraform apply)
+#  - deploy-only   (provision demo env; optional manual destroy)
+#  - combined      (deploy → validate → destroy)
+#
+# If unset, defaults to validate-only (safest).
+
+include:
+  - local: ci-templates/gitlab/validate-only.yml
+  - local: ci-templates/gitlab/deploy-only.yml
+  - local: ci-templates/gitlab/validate-ci.yml

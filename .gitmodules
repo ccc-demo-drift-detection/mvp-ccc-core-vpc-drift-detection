@@ -1,0 +1,3 @@
+[submodule "plugins/plugin-ccc-vpc"]
+	path = plugins/plugin-ccc-vpc
+	url = https://github.com/ccc-demo-drift-detection/plugin-ccc-core-vpc.git

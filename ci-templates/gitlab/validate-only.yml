@@ -1,0 +1,37 @@
+stages:
+  - validate
+
+.default:
+  image: ubuntu:22.04
+  variables:
+    GIT_SUBMODULE_STRATEGY: "recursive"
+    TF_IN_AUTOMATION: "true"
+    REGION: ap-northeast-1
+    ENABLE_VPC_FLOW_LOGS: "true"
+  before_script:
+    - apt-get update
+    - apt-get install -y curl unzip jq python3 python3-pip make git awscli gnupg golang
+    - python3 -m pip install --upgrade pip prowler
+    - export PATH="$HOME/.local/bin:$PATH"
+    - curl -L -o /tmp/privateer.tar.gz https://github.com/privateercloud/privateer/releases/download/v0.13.2/privateer_Linux_x86_64.tar.gz || true
+    - tar -xzf /tmp/privateer.tar.gz -C /usr/local/bin privateer || true
+    - mkdir -p ~/.privateer/bin
+    - if [ -f plugins/plugin-ccc-vpc/vpc ]; then install -m 0755 plugins/plugin-ccc-vpc/vpc ~/.privateer/bin/vpc; else echo "plugin binary not present; attempting build"; (cd plugins/plugin-ccc-vpc && GOTOOLCHAIN=auto go mod tidy && GOTOOLCHAIN=auto go build -o vpc && install -m 0755 vpc ~/.privateer/bin/vpc) || true; fi
+    - chmod +x checks/*.sh
+
+validate_readonly:
+  extends: .default
+  stage: validate
+  rules:
+    - if: '$PIPELINE_MODE == "validate-only" || $PIPELINE_MODE == ""'
+  script:
+    - make validate-ci ENV_FILE=.env.ci
+  artifacts:
+    when: always
+    expire_in: 3 days
+    paths:
+      - output/ci/
+      - output/ccc-vpc/ccc-vpc.json
+      - output/runtime/runtime-guard.json
+      - output/validate/
+  allow_failure: false

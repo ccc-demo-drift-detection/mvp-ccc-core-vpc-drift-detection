@@ -1,0 +1,63 @@
+name: ccc-validate
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write # enable if you use OIDC to fetch AWS credentials
+
+jobs:
+  validate:
+    name: CCC readiness validate-ci
+    runs-on: ubuntu-latest
+    env:
+      TF_IN_AUTOMATION: 'true'
+      # Provide Terraform/AWS intent for the demo. Override in your repo or GitHub environments.
+      REGION: ap-northeast-1
+      ENABLE_VPC_FLOW_LOGS: 'true'
+    steps:
+      - name: Checkout repository (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Optional: configure AWS access for runtime checks (uncomment and wire secrets as needed)
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v3
+      #   with:
+      #     aws-region: ${{ env.REGION }}
+      #     role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      - name: Install project prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq python3-pip
+          python3 -m pip install --user --upgrade pip prowler
+          echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+          sudo tar -xzf privateer_Linux_x86_64.tar.gz -C /usr/local/bin privateer
+          chmod +x checks/*.sh
+          ./validate-prequisites.sh || true
+
+      - name: Run make validate-ci
+        run: |
+          make validate-ci ENV_FILE=envs/env.good_demo
+
+      - name: Upload readiness artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ccc-validate-artifacts
+          path: |
+            output/ci/*
+            output/ccc-vpc/ccc-vpc.json
+            output/runtime/runtime-guard.json
+            output/validate/*.log
+          if-no-files-found: warn
